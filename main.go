@@ -27,7 +27,12 @@ type ItemList map[string]map[string]map[int]Item
 var AllItems ItemList
 
 func main() {
-	goapi.HandleFunc(Handler)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	http.HandleFunc("/", Handler)
+	http.ListenAndServe(":"+port, nil)
 }
 
 
@@ -79,12 +84,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return c.JSON(AllItems[item][year][month])
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	
 
-	app.Listen(":" + port)
+	// app.Listen(":" + port)
 }
 
 func ReadDir(path string) []string {
