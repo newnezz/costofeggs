@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/csv"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -31,12 +32,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	http.HandleFunc("/", Handler)
-	http.ListenAndServe(":"+port, nil)
-}
-
-
-func Handler(w http.ResponseWriter, r *http.Request) {
 
 	AllItems = LoadItems()
 
@@ -55,38 +50,30 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}))
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		// return c.SendString("Hello, World!")
 		return c.JSON(AllItems)
 	})
 
 	app.Get("/price/:item", func(c *fiber.Ctx) error {
 		item := c.Params("item", "eggs")
-
 		return c.JSON(AllItems[item])
 	})
 
 	app.Get("/price/:item/:year", func(c *fiber.Ctx) error {
 		today := time.Now()
-
 		item := c.Params("item", "eggs")
-		year := c.Params("year", string(today.Year()))
-
+		year := c.Params("year", strconv.Itoa(today.Year()))
 		return c.JSON(AllItems[item][year])
 	})
 
 	app.Get("/price/:item/:year/:month", func(c *fiber.Ctx) error {
 		today := time.Now()
-
 		item := c.Params("item", "eggs")
-		year := c.Params("year", string(today.Year()))
-		month, _ := strconv.Atoi(c.Params("month", string(today.Month())))
-
+		year := c.Params("year", strconv.Itoa(today.Year()))
+		month, _ := strconv.Atoi(c.Params("month", strconv.Itoa(int(today.Month()))))
 		return c.JSON(AllItems[item][year][month])
 	})
 
-	
-
-	// app.Listen(":" + port)
+	app.Listen(":" + port)
 }
 
 func ReadDir(path string) []string {
@@ -98,8 +85,7 @@ func ReadDir(path string) []string {
 
 	fileNames := []string{}
 	for _, entry := range entries {
-		if !entry.IsDir() { // Check if it's a file, not a directory
-			fmt.Println(entry.Name())
+		if !entry.IsDir() {
 			name := strings.Split(entry.Name(), ".")[0]
 			fileNames = append(fileNames, name)
 		}
@@ -120,7 +106,6 @@ func LoadItems() ItemList {
 			if list[item.Year] == nil {
 				list[item.Year] = make(map[int]Item)
 			}
-
 			list[item.Year][item.Month] = item
 		}
 
@@ -139,11 +124,8 @@ func ParseItemCSV(itemName, path string) []Item {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-
-	// Skip the first line (header)
 	_, err = reader.Read()
 
-	// Read all records
 	records, err := reader.ReadAll()
 	if err != nil {
 		fmt.Println("Error reading CSV:", err)
@@ -152,9 +134,7 @@ func ParseItemCSV(itemName, path string) []Item {
 
 	items := []Item{}
 
-	// Print records
 	for _, record := range records {
-		// Each record is a slice of strings
 		price, _ := strconv.ParseFloat(record[4], 64)
 		month, _ := parseMonth(record[2])
 
@@ -173,14 +153,10 @@ func ParseItemCSV(itemName, path string) []Item {
 }
 
 func parseMonth(monthStr string) (int, error) {
-	// Trim "M" prefix
 	monthNumStr := strings.TrimPrefix(monthStr, "M")
-
-	// Convert to integer
 	monthNum, err := strconv.Atoi(monthNumStr)
 	if err != nil {
 		return 0, fmt.Errorf("invalid month format: %v", err)
 	}
-
 	return monthNum, nil
 }
