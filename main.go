@@ -27,6 +27,12 @@ type ItemList map[string]map[string]map[int]Item
 var AllItems ItemList
 
 func main() {
+	goapi.HandleFunc(Handler)
+}
+
+
+func Handler(w http.ResponseWriter, r *http.Request) {
+
 	AllItems = LoadItems()
 
 	app := fiber.New()
