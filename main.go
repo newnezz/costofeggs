@@ -73,7 +73,12 @@ func main() {
 		return c.JSON(AllItems[item][year][month])
 	})
 
-	app.Listen(":3000")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	app.Listen(":" + port)
 }
 
 func ReadDir(path string) []string {
